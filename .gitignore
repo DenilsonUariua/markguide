@@ -37,3 +37,6 @@ yarn-error.log*
 
 .vercel
 .env*
+
+# generated report previews
+/preview

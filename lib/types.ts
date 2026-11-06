@@ -33,6 +33,11 @@ export interface CriterionResult {
   name: string;
   awarded: number;
   maxMarks: number;
+  /**
+   * The words in the learner's work that earned the mark, copied verbatim.
+   * This is what lets a teacher check the mark instead of trusting it.
+   */
+  evidence?: string;
   comment: string;
 }
 

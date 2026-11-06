@@ -166,7 +166,10 @@ export function downloadCsv(filename: string, rows: string[][]) {
 
   const csv = rows.map((row) => row.map(escape).join(",")).join("\r\n");
   // The BOM keeps Excel happy with non-ASCII names.
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(filename, new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" }));
+}
+
+export function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 

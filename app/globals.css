@@ -906,6 +906,17 @@ button {
   line-height: 1.4;
 }
 
+/* The words from the paper that earned the mark — the teacher's proof. */
+.criteria-evidence {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--label);
+  margin: 7px 0 0;
+  padding-left: 9px;
+  border-left: 2px solid var(--fill-tertiary);
+  line-height: 1.4;
+}
+
 .bar {
   height: 3px;
   border-radius: 100px;

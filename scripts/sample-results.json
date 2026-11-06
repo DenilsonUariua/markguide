@@ -1,0 +1,355 @@
+{
+  "rubric": {
+    "title": "Grade 9 English HL — Narrative Essay",
+    "subject": "English Home Language",
+    "totalMarks": 30,
+    "gradingNotes": "Content carries the most weight. Structure and language are marked independently of content, so a strong story with weak punctuation still loses marks.",
+    "criteria": [
+      {
+        "name": "Content & Ideas",
+        "maxMarks": 10,
+        "description": "Original, convincing story with a clear focus and supporting detail."
+      },
+      {
+        "name": "Structure & Planning",
+        "maxMarks": 6,
+        "description": "Clear beginning, middle and end; paragraphs used purposefully."
+      },
+      {
+        "name": "Language & Style",
+        "maxMarks": 8,
+        "description": "Sentence variety, tone and register suited to a narrative."
+      },
+      {
+        "name": "Mechanics",
+        "maxMarks": 6,
+        "description": "Spelling, punctuation and paragraphing conventions."
+      }
+    ]
+  },
+  "students": [
+    {
+      "name": "Amara Nghidinwa",
+      "total": 27,
+      "maxMarks": 30,
+      "percentage": 90,
+      "confidence": "high",
+      "flags": [],
+      "overallComment": "A controlled, confident narrative. The opening image of the empty taxi rank does a lot of work in one sentence, and the ending earns its quietness instead of explaining itself.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 9,
+          "maxMarks": 10,
+          "evidence": "The taxi rank was empty at six, but the smell of last night's rain still stood in the road.",
+          "comment": "Original premise and a genuine emotional turn. One more concrete detail in the middle section would lift it to full marks."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 6,
+          "maxMarks": 6,
+          "evidence": "By the time I reached the corner the rank was already behind me.",
+          "comment": "Clean three-part shape. Paragraph breaks fall exactly where the scene shifts."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 7,
+          "maxMarks": 8,
+          "evidence": "Quiet as a held breath, the morning waited for someone to need it.",
+          "comment": "Good sentence variety and restraint. A few sentences start the same way in paragraph four."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 5,
+          "maxMarks": 6,
+          "evidence": "The rank was empty it was always empty at six.",
+          "comment": "Two comma splices in paragraph two; spelling and paragraphing otherwise secure."
+        }
+      ]
+    },
+    {
+      "name": "Thabo Shikongo",
+      "total": 24,
+      "maxMarks": 30,
+      "percentage": 80,
+      "confidence": "high",
+      "flags": [],
+      "overallComment": "Energetic and readable. The dialogue carries the story, but the ending arrives suddenly and the reader is left without a sense of what changed.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 8,
+          "maxMarks": 10,
+          "evidence": "The whole street knew before my mother did, and that was the worst part.",
+          "comment": "Strong central conflict. The resolution is asserted rather than shown."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 5,
+          "maxMarks": 6,
+          "evidence": "And then it was over.",
+          "comment": "Good build-up; the final paragraph rushes the closing beat."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 7,
+          "maxMarks": 8,
+          "evidence": "“You're not going,” she said, and the kettle kept boiling.",
+          "comment": "Natural, believable dialogue. Narration occasionally slips into telling."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 4,
+          "maxMarks": 6,
+          "evidence": "“sit down” she said",
+          "comment": "Dialogue punctuation is inconsistent — several missing commas before speech tags."
+        }
+      ]
+    },
+    {
+      "name": "Lena Amukoto",
+      "total": 22,
+      "maxMarks": 30,
+      "percentage": 73,
+      "confidence": "medium",
+      "flags": [
+        "Handwriting on page 2 was partly illegible — two sentences could not be read."
+      ],
+      "overallComment": "A thoughtful piece with a strong sense of place. The middle section loses focus, and the handwriting on the second page made part of the argument impossible to follow.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 8,
+          "maxMarks": 10,
+          "evidence": "The river carried the smell of the mill all the way to our gate.",
+          "comment": "Vivid setting and a clear idea. Two sentences on page 2 could not be read, so the link between them was marked conservatively."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 4,
+          "maxMarks": 6,
+          "evidence": "We walked. We walked some more. The sun moved.",
+          "comment": "The middle section drifts; the ending returns to the main idea well."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 6,
+          "maxMarks": 8,
+          "evidence": "Because the mill had closed, and because nobody had told the men, and because the trucks still came every Monday.",
+          "comment": "Descriptive strength, but several long sentences lose their thread."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 4,
+          "maxMarks": 6,
+          "evidence": "Its a long way to the river.",
+          "comment": "Punctuation is generally sound where the writing is legible."
+        }
+      ]
+    },
+    {
+      "name": "Kagiso Mbaenda",
+      "total": 19,
+      "maxMarks": 30,
+      "percentage": 63,
+      "confidence": "high",
+      "flags": [],
+      "overallComment": "A workable story told plainly. The idea is sound but the writing stays at the level of summary — the reader is told what happened rather than shown.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 6,
+          "maxMarks": 10,
+          "evidence": "I was happy when I got the bicycle.",
+          "comment": "Clear plot, limited detail. Little sensory description to hold the reader."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 5,
+          "maxMarks": 6,
+          "evidence": "First we went to town. Then we went back. After that we went home.",
+          "comment": "Logical order and sensible paragraphing."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 5,
+          "maxMarks": 8,
+          "evidence": "It was nice. It was very nice. It was a nice day.",
+          "comment": "Accurate but flat. Sentence lengths are very uniform."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 3,
+          "maxMarks": 6,
+          "evidence": "we was walking home when the rain started",
+          "comment": "Frequent tense shifts between past and present in paragraphs three and four."
+        }
+      ]
+    },
+    {
+      "name": "Nangula Iipinge",
+      "total": 17,
+      "maxMarks": 30,
+      "percentage": 57,
+      "confidence": "medium",
+      "flags": [
+        "Only one page submitted — the guide expects a complete narrative, so Structure was capped.",
+        "Confidence is medium: the scanned page was rotated and partly cropped."
+      ],
+      "overallComment": "An engaging opening that stops before the story develops. Marked on what was submitted, but a full draft would likely score considerably higher.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 6,
+          "maxMarks": 10,
+          "evidence": "The bus was late again, and I had already counted the cars that went past.",
+          "comment": "Promising premise, but the narrative ends mid-scene."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 3,
+          "maxMarks": 6,
+          "evidence": "and then the bus came and",
+          "comment": "No resolution present. Capped because the submitted work is incomplete."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 5,
+          "maxMarks": 8,
+          "evidence": "I counted seventeen cars, one truck, and a dog that did not look at me.",
+          "comment": "Confident voice in the opening paragraph."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 3,
+          "maxMarks": 6,
+          "evidence": "i waited at the stop for two hours",
+          "comment": "Hard to judge fully — the bottom of the page was cropped in the scan."
+        }
+      ]
+    },
+    {
+      "name": "Petrus Kambwa",
+      "total": 13,
+      "maxMarks": 30,
+      "percentage": 43,
+      "confidence": "low",
+      "flags": [
+        "The document appears to be a Grade 8 task, not the Grade 9 narrative essay.",
+        "Marked against the guide supplied, but the criteria may not match this paper."
+      ],
+      "overallComment": "This looks like a different task. It was marked against the guide supplied, but the criteria do not line up cleanly with what was written, so treat these marks as provisional.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 5,
+          "maxMarks": 10,
+          "evidence": "My holiday was good. We went to the beach and it was fun.",
+          "comment": "Addresses a different prompt; relevance to the set topic is limited."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 3,
+          "maxMarks": 6,
+          "evidence": "On the first day we swam. On the second day we swam. On the third day we swam.",
+          "comment": "Organised, but around the wrong task."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 3,
+          "maxMarks": 8,
+          "evidence": "The beach was nice and the water was nice and the food was nice.",
+          "comment": "Simple sentences, limited development."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 2,
+          "maxMarks": 6,
+          "evidence": "me and my brother went to the beach",
+          "comment": "Frequent capitalisation errors at sentence starts."
+        }
+      ]
+    },
+    {
+      "name": "Selma Uusiku",
+      "total": 9,
+      "maxMarks": 30,
+      "percentage": 30,
+      "confidence": "low",
+      "flags": [
+        "Three pages were submitted but only page 1 could be read — pages 2 and 3 are out of focus.",
+        "Marked from page 1 only. Re-upload the full document before recording this mark."
+      ],
+      "overallComment": "Only the first page was legible, so this mark reflects roughly a third of the submitted work. Do not record it without re-checking the document.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 4,
+          "maxMarks": 10,
+          "evidence": "The first thing I remember is the sound of the gate.",
+          "comment": "Only the opening is readable; the story cannot be assessed past page 1."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 2,
+          "maxMarks": 6,
+          "evidence": "The gate, then the yard, then the door.",
+          "comment": "Judged on page 1 alone."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 2,
+          "maxMarks": 8,
+          "evidence": "It was loud. It is loud. It will be loud.",
+          "comment": "Judged on page 1 alone."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 1,
+          "maxMarks": 6,
+          "evidence": "the gate was old and it made a noise that i did not like",
+          "comment": "Judged on page 1 alone."
+        }
+      ]
+    },
+    {
+      "name": "Johannes Haufiku",
+      "total": 26,
+      "maxMarks": 30,
+      "percentage": 87,
+      "confidence": "high",
+      "flags": [],
+      "overallComment": "Assured writing with a genuinely surprising final line. The strongest control of sentence rhythm in the class.",
+      "criteria": [
+        {
+          "name": "Content & Ideas",
+          "awarded": 9,
+          "maxMarks": 10,
+          "evidence": "My father's hands never once touched the paper he was signing.",
+          "comment": "Original and fully realised. The central image is sustained without strain."
+        },
+        {
+          "name": "Structure & Planning",
+          "awarded": 6,
+          "maxMarks": 6,
+          "evidence": "Then the letter came, and with it the noise.",
+          "comment": "Tight, deliberate shape — every paragraph moves the story forward."
+        },
+        {
+          "name": "Language & Style",
+          "awarded": 7,
+          "maxMarks": 8,
+          "evidence": "The house held its breath like a coin held edge-up.",
+          "comment": "Excellent rhythm. One over-written simile in paragraph five."
+        },
+        {
+          "name": "Mechanics",
+          "awarded": 4,
+          "maxMarks": 6,
+          "evidence": "I did not recieve the letter.",
+          "comment": "Three spelling errors, all of the same word."
+        }
+      ]
+    }
+  ]
+}

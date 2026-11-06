@@ -16,9 +16,12 @@ browser tab and disappears when you close it.
 3. **Add student documents** — one PDF or photo per student, up to 25 at a time. Photos are
    downscaled in the browser before upload so a phone camera picture becomes a fast ~300 KB request.
 4. **Each paper is marked on its own** against the extracted rubric, two at a time, with live
-   progress.
-5. **Review the results** — class average, highest and lowest, a per-criterion breakdown with
-   comments, flags for papers that need a human eye, and a CSV export.
+   progress. Every mark comes back with the words in the paper that earned it, so the teacher
+   checks the evidence instead of taking the total on trust. Every mark comes back with the words in the paper that earned it, so the teacher
+   checks the evidence instead of taking the total on trust.
+5. **Review the results** — class average, highest and lowest, a per-criterion breakdown showing
+   the guide's wording, the quoted evidence and the reason behind each mark, flags for papers that
+   need a human eye, and a Word report you can print or file.
 
 Marks are always computed server-side from the per-criterion marks, so a student's total can never
 disagree with their breakdown.
@@ -92,11 +95,12 @@ app/
   api/mark/route            one student document -> marks (Gemini, JSON schema)
 components/
   RubricReview.tsx          "here's what we'll mark" screen
-  ResultsView.tsx           summary, per-student breakdown, CSV export
+  ResultsView.tsx           summary, per-student breakdown, report export
   Icons.tsx, Spinner.tsx    inline SVG icon set, iOS activity indicator
 lib/
+  report.ts                 the Word report: layout, styles, filename
   gemini.ts                 prompts, response schemas, retries, normalisation
-  client.ts                 image compression, base64, fetch wrapper, CSV
+  client.ts                 image compression, base64, fetch wrapper, downloads
   validate.ts               request parsing and size guards
   types.ts, constants.ts    shared types and limits
 ```

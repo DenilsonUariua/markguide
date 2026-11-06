@@ -192,10 +192,11 @@ const MARK_SCHEMA = {
         properties: {
           name: { type: "STRING" },
           awarded: { type: "NUMBER" },
+          evidence: { type: "STRING" },
           comment: { type: "STRING" },
         },
-        required: ["name", "awarded", "comment"],
-        propertyOrdering: ["name", "awarded", "comment"],
+        required: ["name", "awarded", "evidence", "comment"],
+        propertyOrdering: ["name", "awarded", "evidence", "comment"],
       },
     },
     overallComment: { type: "STRING" },
@@ -278,7 +279,9 @@ function normalizeRubric(raw: Rubric): Rubric {
 
 const MARK_SYSTEM = `You are an experienced, fair teacher marking a student's work against a marking guide.
 
-You are consistent: identical answers get identical marks. You award marks only for work that is actually visible in the document. You never invent content, and you never assume a student meant something they did not write.`;
+You are consistent: identical answers get identical marks. You award marks only for work that is actually visible in the document. You never invent content, and you never assume a student meant something they did not write.
+
+You also show your working. For every mark you award, you quote the words in the student's work that earned it, so the teacher can check you rather than take your word for it.`;
 
 function buildMarkInstruction(rubric: Rubric, studentName: string): string {
   const criteriaList = rubric.criteria
@@ -301,15 +304,16 @@ Mark the attached student work against the guide above.
 Rules:
 1. Award marks for every criterion, between 0 and that criterion's maximum. Halves (0.5) are allowed; nothing finer.
 2. Use the exact criterion names above, in the same order.
-3. If the student did not attempt a criterion, award 0 and say so in the comment.
-4. Each comment must be under 25 words and refer to what this student actually wrote. Never write generic praise.
-5. overallComment: 2 to 3 sentences written to the teacher (not the student). Name the strongest area and the biggest gap.
-6. flags: only genuine concerns the teacher should check by hand — illegible handwriting, a missing page, an answer that could be read two ways, a mark that sits right on a grade boundary. Return an empty array if there are none.
-7. confidence: "high" when the work was clearly legible and mapped unambiguously to the guide; "medium" when you had to make judgement calls; "low" when significant parts were unreadable or off-topic.`;
+3. If the student did not attempt a criterion, award 0, put "Not attempted" in evidence, and say so in the comment.
+4. evidence: the exact words from the student's work that earned the mark — a short quote, under 20 words, copied character for character including their own spelling and punctuation. A teacher reads this to check your mark, so it must genuinely appear in the document. Never paraphrase, never invent a quote, and never quote the marking guide.
+5. comment: under 25 words explaining why those words earn that mark, and what was missing where marks were lost. Never write generic praise.
+6. overallComment: 2 to 3 sentences written to the teacher (not the student). Name the strongest area and the biggest gap.
+7. flags: only genuine concerns the teacher should check by hand — illegible handwriting, a missing page, an answer that could be read two ways, a mark that sits right on a grade boundary. Return an empty array if there are none.
+8. confidence: "high" when the work was clearly legible and mapped unambiguously to the guide; "medium" when you had to make judgement calls; "low" when significant parts were unreadable or off-topic.`;
 }
 
 interface RawMark {
-  criteria?: Array<{ name?: string; awarded?: number; comment?: string }>;
+  criteria?: Array<{ name?: string; awarded?: number; evidence?: string; comment?: string }>;
   overallComment?: string;
   flags?: string[];
   confidence?: string;
@@ -341,6 +345,7 @@ export async function markDocument(
       name: criterion.name,
       awarded,
       maxMarks: criterion.maxMarks,
+      evidence: cleanEvidence(match?.evidence),
       comment: (match?.comment ?? "").trim() || "No comment returned for this criterion.",
     };
   });
@@ -366,6 +371,26 @@ export async function markDocument(
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Models like to wrap quotes in their own quotation marks and occasionally
+ * answer "N/A". Both make the report look sloppy, so tidy it here rather than
+ * trusting the wording.
+ */
+function cleanEvidence(value: string | undefined): string {
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^["'“”‘’\u2018\u2019]+|["'“”‘’\u2018\u2019]+$/g, "")
+    .trim();
+
+  if (!text || /^(n\/?a|none|null|not applicable|no evidence)\.?$/i.test(text)) return "";
+  if (text.length <= 180) return text;
+
+  const cut = text.slice(0, 180);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 120 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
+}
 
 function clamp(value: number, min: number, max: number): number {
   if (Number.isNaN(value)) return min;

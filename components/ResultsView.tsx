@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { ChevronRight, Download, Info, Warning } from "@/components/Icons";
-import { downloadCsv } from "@/lib/client";
+import { downloadBlob, downloadCsv } from "@/lib/client";
 import { formatMark, formatPercent } from "@/lib/constants";
 import type { MarkResult, Rubric, StudentDoc } from "@/lib/types";
 
@@ -42,6 +42,8 @@ function formatDuration(ms: number): string {
 export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFailed }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const marked = useMemo(() => students.filter((s) => s.status === "done" && s.result), [students]);
   const failed = useMemo(() => students.filter((s) => s.status === "error"), [students]);
@@ -71,6 +73,44 @@ export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFai
   }, [marked, filter]);
 
   const guideTotal = rubric.criteria.reduce((sum, c) => sum + c.maxMarks, 0);
+
+  function fileSlug(): string {
+    return (
+      rubric.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 40) || "results"
+    );
+  }
+
+  /**
+   * The Word report is what most teachers actually want: a document they can
+   * read, print or paste into a record book. `docx` is pulled in on demand so
+   * it never slows down the marking flow.
+   */
+  async function exportReport() {
+    if (!stats || exporting) return;
+    setExporting(true);
+    setExportError(null);
+
+    try {
+      const { renderReport, reportFilename } = await import("@/lib/report");
+      const blob = await renderReport({
+        rubric,
+        students: marked.map((student) => ({
+          studentName: student.studentName,
+          result: student.result as MarkResult,
+        })),
+        model: stats.model,
+      });
+      downloadBlob(reportFilename(rubric), blob);
+    } catch {
+      setExportError("The report could not be built. Try again, or use the CSV.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function exportCsv() {
     if (!stats) return;
@@ -104,15 +144,9 @@ export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFai
         ];
       });
 
-    const slug =
-      rubric.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-        .slice(0, 40) || "results";
     const date = new Date().toISOString().slice(0, 10);
 
-    downloadCsv(`markguide-${slug}-${date}.csv`, [header, ...rows]);
+    downloadCsv(`markguide-${fileSlug()}-${date}.csv`, [header, ...rows]);
   }
 
   if (!stats) {
@@ -307,6 +341,9 @@ export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFai
                               style={{ width: `${Math.max(2, Math.min(100, ratio * 100))}%` }}
                             />
                           </div>
+                          {criterion.evidence ? (
+                            <p className="criteria-evidence">“{criterion.evidence}”</p>
+                          ) : null}
                           <p className="criteria-comment">{criterion.comment}</p>
                         </div>
                       );
@@ -356,13 +393,30 @@ export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFai
         )}
       </div>
 
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
+        <button
+          className="btn btn-plain btn-sm"
+          onClick={exportCsv}
+          style={{ fontSize: 13, color: "var(--label-secondary)" }}
+        >
+          Spreadsheet instead (CSV)
+        </button>
+      </div>
+
       <div style={{ height: 8 }} />
+
+      {exportError ? (
+        <div className="alert alert-error" style={{ marginBottom: 12 }}>
+          <Warning size={18} />
+          <div>{exportError}</div>
+        </div>
+      ) : null}
 
       <div className="cta-bar">
         <div className="cta-inner">
-          <button className="btn btn-primary" onClick={exportCsv}>
+          <button className="btn btn-primary" onClick={exportReport} disabled={exporting}>
             <Download size={19} />
-            Download marks (CSV)
+            {exporting ? "Building report…" : "Download report (Word)"}
           </button>
           <div className="inline-actions">
             <button className="btn btn-tinted btn-sm" onClick={onAddMore} style={{ minHeight: 44 }}>
