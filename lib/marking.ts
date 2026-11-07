@@ -68,7 +68,7 @@ const GUIDE_INSTRUCTION = `The attached file(s) are a teacher's marking guide: a
 Extract the rubric exactly as the guide defines it.
 
 Rules:
-1. Group the guide into assessment criteria. Use the guide's own wording for names. If the guide lists many individual questions, group related ones into a single criterion (for example "Question 1 — Algebra") instead of creating dozens of tiny ones. Aim for 3 to 12 criteria.
+1. One criterion per numbered question or sub-question that the guide marks separately, named with the guide's own numbering and wording (for example "1.2 Factorise x² − 9"). Every mark must be traceable to the exact question it came from, so never bundle several sub-questions into one criterion unless the guide itself gives a single mark allocation for the whole question. Aim for 3 to 12 criteria; if the guide marks more than 12 items, group the smallest ones under their parent question.
 2. maxMarks is the marks the guide allocates to that criterion. The criteria must add up to the guide's total.
 3. description: 1 to 3 sentences stating exactly what earns full marks, including partial-credit rules where the guide gives them. Quote key expected answers (formulas, dates, values) where the guide provides them. Be specific — this text is what the marking will be judged against.
 4. totalMarks: the sum of all maxMarks.
