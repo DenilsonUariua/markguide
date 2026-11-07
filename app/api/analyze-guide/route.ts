@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { AIError } from "@/lib/ai";
+import { isAIError } from "@/lib/ai";
 import { analyzeGuide } from "@/lib/marking";
 import { RequestError, parseGuideFiles } from "@/lib/validate";
 
@@ -19,13 +19,16 @@ export async function POST(request: Request) {
     if (error instanceof RequestError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (error instanceof AIError) {
+    if (isAIError(error)) {
       return NextResponse.json({ error: error.message, detail: error.detail }, { status: error.status });
     }
 
     console.error("[analyze-guide] unexpected", error);
     return NextResponse.json(
-      { error: "Something went wrong while reading the marking guide. Please try again." },
+      {
+        error: "Something went wrong while reading the marking guide. Please try again.",
+        detail: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+      },
       { status: 500 },
     );
   }

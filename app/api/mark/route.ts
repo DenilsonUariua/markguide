@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { AIError, activeModel } from "@/lib/ai";
+import { activeModel, isAIError } from "@/lib/ai";
 import { markDocument } from "@/lib/marking";
 import { RequestError, parseFile, parseRubric } from "@/lib/validate";
 
@@ -33,13 +33,16 @@ export async function POST(request: Request) {
     if (error instanceof RequestError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (error instanceof AIError) {
+    if (isAIError(error)) {
       return NextResponse.json({ error: error.message, detail: error.detail }, { status: error.status });
     }
 
     console.error("[mark] unexpected", error);
     return NextResponse.json(
-      { error: "Something went wrong while marking that document. Please try again." },
+      {
+        error: "Something went wrong while marking that document. Please try again.",
+        detail: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+      },
       { status: 500 },
     );
   }

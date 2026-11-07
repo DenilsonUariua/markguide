@@ -91,12 +91,16 @@ export async function analyzeGuide(files: FilePart[]): Promise<Rubric> {
 }
 
 function normalizeRubric(raw: Rubric): Rubric {
-  const criteria = (raw.criteria ?? [])
+  // Never trust the shape: plain-JSON fallback mode has no schema enforcement,
+  // and a malformed answer used to throw a TypeError all the way to a 500.
+  const incoming = Array.isArray(raw?.criteria) ? raw.criteria : [];
+
+  const criteria = incoming
     .filter((c) => c && typeof c.name === "string" && c.name.trim())
     .map((c) => ({
       name: c.name.trim(),
       maxMarks: roundHalf(Math.max(0, Number(c.maxMarks) || 0)),
-      description: (c.description ?? "").trim(),
+      description: typeof c.description === "string" ? c.description.trim() : "",
     }))
     .filter((c) => c.maxMarks > 0);
 
@@ -110,10 +114,10 @@ function normalizeRubric(raw: Rubric): Rubric {
   const sum = criteria.reduce((total, c) => total + c.maxMarks, 0);
 
   return {
-    title: (raw.title ?? "").trim() || "Marking guide",
-    subject: (raw.subject ?? "").trim(),
+    title: text(raw?.title) || "Marking guide",
+    subject: text(raw?.subject),
     totalMarks: sum,
-    gradingNotes: (raw.gradingNotes ?? "").trim(),
+    gradingNotes: text(raw?.gradingNotes),
     criteria,
   };
 }
@@ -178,10 +182,12 @@ export async function markDocument(
     temperature: 0.15,
   });
 
+  const rawCriteria = Array.isArray(raw?.criteria) ? raw.criteria : [];
+
   const criteria: CriterionResult[] = rubric.criteria.map((criterion, index) => {
     const match =
-      raw.criteria?.find((c) => (c.name ?? "").trim().toLowerCase() === criterion.name.toLowerCase()) ??
-      raw.criteria?.[index];
+      rawCriteria.find((c) => (c?.name ?? "").trim().toLowerCase() === criterion.name.toLowerCase()) ??
+      rawCriteria[index];
 
     const awarded = roundHalf(clamp(Number(match?.awarded) || 0, 0, criterion.maxMarks));
 
@@ -190,7 +196,7 @@ export async function markDocument(
       awarded,
       maxMarks: criterion.maxMarks,
       evidence: cleanEvidence(match?.evidence),
-      comment: (match?.comment ?? "").trim() || "No comment returned for this criterion.",
+      comment: text(match?.comment) || "No comment returned for this criterion.",
     };
   });
 
@@ -206,8 +212,11 @@ export async function markDocument(
     total,
     maxMarks,
     percentage: maxMarks > 0 ? (total / maxMarks) * 100 : 0,
-    overallComment: (raw.overallComment ?? "").trim() || "No overall comment was returned.",
-    flags: (raw.flags ?? []).map((f) => String(f).trim()).filter(Boolean).slice(0, 4),
+    overallComment: text(raw?.overallComment) || "No overall comment was returned.",
+    flags: (Array.isArray(raw?.flags) ? raw.flags : [])
+      .map((f) => text(f))
+      .filter(Boolean)
+      .slice(0, 4),
     confidence,
   };
 }
@@ -215,6 +224,13 @@ export async function markDocument(
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
+
+/** Coerce whatever the model sent into a trimmed string, never throw. */
+function text(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
 
 /**
  * Models like to wrap quotes in their own quotation marks and occasionally

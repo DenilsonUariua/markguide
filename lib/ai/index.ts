@@ -11,6 +11,20 @@ import {
 export { AIError };
 export type { FilePart, ProviderId } from "@/lib/ai/types";
 
+/**
+ * `instanceof` is not enough on its own: a serverless bundle can end up with two
+ * copies of this class, and then a perfectly good AIError falls through to the
+ * route's generic 500. The name + status check catches that case.
+ */
+export function isAIError(error: unknown): error is AIError {
+  if (error instanceof AIError) return true;
+  return (
+    error instanceof Error &&
+    error.name === "AIError" &&
+    typeof (error as { status?: unknown }).status === "number"
+  );
+}
+
 const DEFAULT_FALLBACK_MODEL = "openrouter/free";
 
 /**
@@ -127,19 +141,24 @@ function requestTimeoutMs(): number {
   return Number.isFinite(configured) && configured >= 5_000 ? configured : 55_000;
 }
 
-async function callOnce<T>(provider: Provider, request: ProviderRequest): Promise<T> {
-  const started = Date.now();
-  let response: Response;
-
+/**
+ * The abort can land while the body is still streaming, not just on the initial
+ * connect — Node's DOMException is not an Error, so reading the body inside the
+ * same guard is what keeps a slow model from escaping as a raw 500.
+ */
+async function send(provider: Provider, request: ProviderRequest): Promise<{ response: Response; body: string }> {
   try {
-    response = await fetch(request.url, {
+    const response = await fetch(request.url, {
       method: "POST",
       headers: request.headers,
       body: JSON.stringify(request.body),
       signal: AbortSignal.timeout(requestTimeoutMs()),
     });
+
+    return { response, body: await response.text() };
   } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    const name = (error as { name?: string })?.name ?? "";
+    const timedOut = name === "TimeoutError" || name === "AbortError";
 
     throw new AIError(
       timedOut
@@ -147,19 +166,22 @@ async function callOnce<T>(provider: Provider, request: ProviderRequest): Promis
         : `Could not reach ${provider.label}. Check the server's internet connection.`,
       504,
       {
-        detail: error instanceof Error ? error.message : String(error),
+        detail: `${name || "Error"}: ${(error as Error)?.message ?? String(error)}`,
         transient: !timedOut,
       },
     );
   }
+}
+
+async function callOnce<T>(provider: Provider, request: ProviderRequest): Promise<T> {
+  const started = Date.now();
+  const { response, body: raw } = await send(provider, request);
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw provider.errorFor(response.status, body);
+    throw provider.errorFor(response.status, raw);
   }
 
   let payload: unknown;
-  const raw = await response.text();
 
   try {
     payload = JSON.parse(raw);
