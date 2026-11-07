@@ -150,7 +150,7 @@ ${JSON.stringify(toJsonSchema(request.schema))}`,
   }
 
   private request(request: JsonRequest, extra: Record<string, unknown>): ProviderRequest {
-    const reasoning = resolveReasoning();
+    const reasoning = resolveReasoning(this.model);
 
     return {
       url: API_URL,
@@ -198,13 +198,21 @@ ${JSON.stringify(toJsonSchema(request.schema))}`,
 }
 
 /**
- * Left unset by default: OpenRouter then uses whatever the model does natively.
- * Set OPENROUTER_REASONING to none|minimal|low|medium|high to override.
+ * Marking is rubric matching, not a reasoning puzzle — the same reason Gemini's
+ * thinking budget is zeroed for flash models. Free models are the slow ones and
+ * a reasoning pass can take 30 of their 45 seconds, so `:free` slugs default to
+ * no reasoning. Set OPENROUTER_REASONING to none|minimal|low|medium|high to
+ * override either way.
  */
-function resolveReasoning(): Record<string, unknown> | undefined {
+function resolveReasoning(model: string): Record<string, unknown> | undefined {
   const effort = process.env.OPENROUTER_REASONING?.trim().toLowerCase();
-  if (!effort) return undefined;
-  if (effort === "none" || effort === "off" || effort === "false") return { enabled: false };
-  if (effort === "minimal" || effort === "low" || effort === "medium" || effort === "high") return { effort };
-  return undefined;
+
+  if (effort) {
+    if (effort === "none" || effort === "off" || effort === "false") return { enabled: false };
+    if (effort === "minimal" || effort === "low" || effort === "medium" || effort === "high") {
+      return { effort };
+    }
+  }
+
+  return /:free$/.test(model) ? { enabled: false } : undefined;
 }

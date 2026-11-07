@@ -76,7 +76,7 @@ OPENROUTER_API_KEY=your-key-here
 | --- | --- | --- |
 | `OPENROUTER_MODEL` | `google/gemini-2.5-flash` | Must read PDFs and images. Other good picks: `google/gemini-2.5-pro`, `openai/gpt-4.1`, `anthropic/claude-sonnet-4.5`. |
 | `OPENROUTER_FALLBACK_MODEL` | `openrouter/free` | Tried when the primary fails outright — rate limit, no credit for PDFs, model delisted. Set to `""` to disable. |
-| `OPENROUTER_REASONING` | model default | `none`, `minimal`, `low`, `medium` or `high`. `none` keeps a class set fast. |
+| `OPENROUTER_REASONING` | `none` for `:free` models, else the model default | `none`, `minimal`, `low`, `medium` or `high`. Free models skip the reasoning pass: it took a paper from 45 s to 7 s here, with the same marks. |
 | `OPENROUTER_APP_NAME` | `MarkGuide` | Attribution on your OpenRouter activity page. |
 | `OPENROUTER_SITE_URL` | unset | Optional referer for the same page. |
 | `AI_TIMEOUT_MS` | `55000` | Per-request timeout. Keep it under the route's `maxDuration`. |
@@ -103,7 +103,7 @@ across a class set are not perfectly consistent, so it is used as the fallback b
 The free multimodal models were benchmarked on the same two papers — a typed PDF memo and two
 handwritten answer sheets with known correct marks:
 
-| Model | Rubric from PDF | Marks (paper 1) | Marks (paper 2) | Speed |
+| Model | Rubric from PDF | Marks (paper 1) | Marks (paper 2) | Speed (reasoning on) |
 | --- | --- | --- | --- | --- |
 | `dots-studio/dots-3-note-preview:free` | ✅ 10/10 marks | 6/10 (defensible) | **7/10, exactly right** | 45–47 s |
 | `nvidia/nemotron-3.5-super-vl:free` | ✅ 10/10 marks | 6/10 | timed out | 37 s, unstable |
@@ -114,14 +114,17 @@ handwritten answer sheets with known correct marks:
 | `google/gemma-4-26b-a4b-it:free` | ❌ `429` | ❌ `429` | — | — |
 
 `dots-studio/dots-3-note-preview:free` is the best free pick: it was the only model to award a
-paper perfectly, it quoted the student's own words as evidence, and it never errored. Everything
-free is slow though (45 s+ per paper), so a 25-paper batch takes about 10 minutes and a few papers
-may need a retry.
+paper perfectly, it quoted the student's own words as evidence, and it never errored.
 
-Free accounts are also limited to roughly 20 requests/minute and 50/day (1000/day once $10 of credit
-has ever been bought), and the "free endpoints" data policy has to be enabled in OpenRouter's
-privacy settings. For a real class set, `google/gemini-2.5-flash` is a few cents per batch, marks in
-5–8 s, and is worth it.
+It is also a reasoning model, and most of those 45 s were thinking about a task that does not need
+it. With reasoning switched off — the default for `:free` slugs — the same two papers marked in
+**7.4 s and 7.6 s** with the same marks. That matters on Vercel, where a function has 60 s: with
+reasoning on, a live mark took 50–56 s and sometimes timed out; with it off there is plenty of room.
+
+Free accounts are still limited to roughly 20 requests/minute and 50/day (1000/day once $10 of
+credit has ever been bought), and the "free endpoints" data policy has to be enabled in OpenRouter's
+privacy settings. For a real class set, `google/gemini-2.5-flash` marks in 5–8 s for a few cents a
+batch.
 
 Both providers go through the same prompts, schemas and normalisation in `lib/marking.ts` — the
 provider only changes how the request is framed and how the answer is read back.
