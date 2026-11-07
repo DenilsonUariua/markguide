@@ -19,7 +19,7 @@ import {
 import { ResultsView } from "@/components/ResultsView";
 import { RubricReview } from "@/components/RubricReview";
 import { Spinner } from "@/components/Spinner";
-import { UploadError, postJson, prepareFile } from "@/lib/client";
+import { UploadError, isRetryable, postJson, prepareFile } from "@/lib/client";
 import {
   MARK_CONCURRENCY,
   MAX_GUIDE_FILES,
@@ -264,6 +264,27 @@ export default function Page() {
 
       let cursor = 0;
 
+      /**
+       * Free models routinely brush against the 55 s timeout, so a paper that
+       * fails on a timeout or a rate limit gets one quiet retry before the
+       * teacher is told anything went wrong.
+       */
+      const markOne = async (item: StudentDoc) => {
+        const body = {
+          rubric,
+          student: { mimeType: item.file.mimeType, data: item.file.data },
+          studentName: item.studentName || "Student",
+        };
+
+        try {
+          return await postJson<{ result: MarkResult }>("/api/mark", body);
+        } catch (error) {
+          if (!isRetryable(error)) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          return postJson<{ result: MarkResult }>("/api/mark", body);
+        }
+      };
+
       const worker = async () => {
         while (cursor < targets.length) {
           const item = targets[cursor++];
@@ -277,11 +298,7 @@ export default function Page() {
           );
 
           try {
-            const { result } = await postJson<{ result: MarkResult }>("/api/mark", {
-              rubric,
-              student: { mimeType: item.file.mimeType, data: item.file.data },
-              studentName: item.studentName || "Student",
-            });
+            const { result } = await markOne(item);
 
             setStudents((prev) =>
               prev.map((student) =>
@@ -483,8 +500,9 @@ export default function Page() {
             </div>
 
             <p className="footnote">
-              Documents are sent to Google&apos;s Gemini API to be marked. Nothing is stored on this
-              site — closing the tab clears your batch.
+              Documents are sent to the AI provider this site is configured with — Gemini or
+              OpenRouter — to be marked. Nothing is stored on this site; closing the tab clears your
+              batch.
             </p>
 
             <div className="cta-bar">

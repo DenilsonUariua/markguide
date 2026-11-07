@@ -1,157 +1,5 @@
+import { AIError, generateJson, type FilePart } from "@/lib/ai";
 import type { CriterionResult, MarkResult, Rubric } from "@/lib/types";
-
-const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-
-export const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-
-/** Roughly matches the JSON we ask for, so responses don't get truncated. */
-const MAX_OUTPUT_TOKENS = 8192;
-
-/**
- * Marking is rubric matching, not a reasoning puzzle, so we skip the thinking
- * pass to keep a class set responsive on a phone. Gemini 2.5 Pro cannot disable
- * thinking, so it only gets a budget when one is configured explicitly.
- */
-const THINKING_BUDGET = (() => {
-  const configured = process.env.GEMINI_THINKING_BUDGET?.trim();
-  if (configured !== undefined && configured !== "" && !Number.isNaN(Number(configured))) {
-    return Number(configured);
-  }
-  return /flash/i.test(GEMINI_MODEL) ? 0 : undefined;
-})();
-
-export class GeminiError extends Error {
-  status: number;
-  detail?: string;
-
-  constructor(message: string, status = 502, detail?: string) {
-    super(message);
-    this.name = "GeminiError";
-    this.status = status;
-    this.detail = detail;
-  }
-}
-
-export interface FilePart {
-  mimeType: string;
-  data: string; // base64, no data: prefix
-}
-
-interface GeminiRequest {
-  systemInstruction: string;
-  parts: Array<Record<string, unknown>>;
-  schema: Record<string, unknown>;
-  temperature?: number;
-}
-
-/**
- * Single JSON-mode call to Gemini. Retries once on rate limits / upstream 5xx,
- * because marking a batch means many calls and one hiccup shouldn't kill the run.
- */
-async function generateJson<T>({ systemInstruction, parts, schema, temperature = 0.2 }: GeminiRequest): Promise<T> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) {
-    throw new GeminiError(
-      "The server has no Gemini API key. Add GEMINI_API_KEY to your environment and restart.",
-      500,
-    );
-  }
-
-  const body = {
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ role: "user", parts }],
-    generationConfig: {
-      temperature,
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
-      responseMimeType: "application/json",
-      responseSchema: schema,
-      ...(THINKING_BUDGET === undefined ? {} : { thinkingConfig: { thinkingBudget: THINKING_BUDGET } }),
-    },
-  };
-
-  let lastError: GeminiError | null = null;
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const started = Date.now();
-    let response: Response;
-
-    try {
-      response = await fetch(`${API_BASE}/${GEMINI_MODEL}:generateContent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(55_000),
-      });
-    } catch (error) {
-      const timedOut = error instanceof Error && error.name === "TimeoutError";
-      lastError = new GeminiError(
-        timedOut
-          ? "Marking took too long to come back. Try again, or upload a smaller file."
-          : "Could not reach Gemini. Check the server's internet connection.",
-        504,
-        error instanceof Error ? error.message : String(error),
-      );
-      if (attempt === 0) continue;
-      throw lastError;
-    }
-
-    if (!response.ok) {
-      const raw = await response.text().catch(() => "");
-      const retryable = response.status === 429 || response.status >= 500;
-      const friendly =
-        response.status === 429
-          ? "Gemini is rate-limiting requests right now. Give it a few seconds and retry."
-          : response.status === 400
-            ? "Gemini rejected the request. The file may be corrupt or unsupported."
-            : response.status === 403
-              ? "The Gemini API key was rejected. Check that it is valid and that the Generative Language API is enabled."
-              : "Gemini returned an error while marking.";
-      lastError = new GeminiError(friendly, response.status, raw.slice(0, 600));
-      if (retryable && attempt === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        continue;
-      }
-      throw lastError;
-    }
-
-    const json = (await response.json()) as {
-      candidates?: Array<{
-        finishReason?: string;
-        content?: { parts?: Array<{ text?: string }> };
-      }>;
-      promptFeedback?: { blockReason?: string };
-    };
-
-    if (json.promptFeedback?.blockReason) {
-      throw new GeminiError("Gemini declined to process this file. Try a clearer scan.", 422);
-    }
-
-    const candidate = json.candidates?.[0];
-    const text = candidate?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-
-    if (!text.trim()) {
-      const reason = candidate?.finishReason;
-      throw new GeminiError(
-        reason === "MAX_TOKENS"
-          ? "The marking guide produced too much detail for one response. Try splitting it into fewer pages."
-          : "Gemini sent back an empty response. Please try again.",
-        502,
-        `finishReason=${reason ?? "none"} elapsed=${Date.now() - started}ms`,
-      );
-    }
-
-    try {
-      return JSON.parse(text) as T;
-    } catch {
-      throw new GeminiError("Could not read Gemini's response. Please try again.", 502, text.slice(0, 400));
-    }
-  }
-
-  throw lastError ?? new GeminiError("Marking failed for an unknown reason.");
-}
 
 /* ------------------------------------------------------------------ */
 /* Schemas                                                             */
@@ -231,14 +79,11 @@ Rules:
 
 export async function analyzeGuide(files: FilePart[]): Promise<Rubric> {
   const raw = await generateJson<Rubric>({
-    systemInstruction: GUIDE_SYSTEM,
-    parts: [
-      ...files.map((file) => ({
-        inlineData: { mimeType: file.mimeType, data: file.data },
-      })),
-      { text: GUIDE_INSTRUCTION },
-    ],
+    system: GUIDE_SYSTEM,
+    files,
+    prompt: GUIDE_INSTRUCTION,
     schema: RUBRIC_SCHEMA as unknown as Record<string, unknown>,
+    schemaName: "marking_guide",
     temperature: 0.1,
   });
 
@@ -256,7 +101,7 @@ function normalizeRubric(raw: Rubric): Rubric {
     .filter((c) => c.maxMarks > 0);
 
   if (criteria.length === 0) {
-    throw new GeminiError(
+    throw new AIError(
       "No mark allocations could be read from that guide. Try a clearer copy, or one that lists the marks for each question.",
       422,
     );
@@ -325,12 +170,11 @@ export async function markDocument(
   studentName: string,
 ): Promise<Omit<MarkResult, "durationMs" | "model">> {
   const raw = await generateJson<RawMark>({
-    systemInstruction: MARK_SYSTEM,
-    parts: [
-      { inlineData: { mimeType: student.mimeType, data: student.data } },
-      { text: buildMarkInstruction(rubric, studentName) },
-    ],
+    system: MARK_SYSTEM,
+    files: [student],
+    prompt: buildMarkInstruction(rubric, studentName),
     schema: MARK_SCHEMA as unknown as Record<string, unknown>,
+    schemaName: "student_marks",
     temperature: 0.15,
   });
 

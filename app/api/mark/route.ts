@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { GEMINI_MODEL, GeminiError, markDocument } from "@/lib/gemini";
+import { AIError, activeModel } from "@/lib/ai";
+import { markDocument } from "@/lib/marking";
 import { RequestError, parseFile, parseRubric } from "@/lib/validate";
 
 export const runtime = "nodejs";
@@ -26,13 +27,13 @@ export async function POST(request: Request) {
     const result = await markDocument(rubric, student, studentName);
 
     return NextResponse.json({
-      result: { ...result, durationMs: Date.now() - started, model: GEMINI_MODEL },
+      result: { ...result, durationMs: Date.now() - started, model: activeModel() },
     });
   } catch (error) {
     if (error instanceof RequestError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (error instanceof GeminiError) {
+    if (error instanceof AIError) {
       return NextResponse.json({ error: error.message, detail: error.detail }, { status: error.status });
     }
 

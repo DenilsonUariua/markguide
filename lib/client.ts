@@ -58,6 +58,22 @@ async function compressImage(file: File): Promise<Blob> {
 
 export class UploadError extends Error {}
 
+/** A failed API call, carrying the HTTP status so callers can retry the blips. */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+/** Rate limits, timeouts and upstream errors: worth one more go. */
+export function isRetryable(error: unknown): boolean {
+  return error instanceof ApiError && [429, 502, 503, 504].includes(error.status);
+}
+
 /** crypto.randomUUID needs a secure context; fall back when opened over plain http. */
 function newId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -139,7 +155,7 @@ export async function postJson<T>(url: string, body: unknown): Promise<T> {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("You appear to be offline. Check your connection and try again.");
+    throw new ApiError("You appear to be offline. Check your connection and try again.", 0);
   }
 
   const payload = (await response.json().catch(() => null)) as
@@ -147,11 +163,12 @@ export async function postJson<T>(url: string, body: unknown): Promise<T> {
     | null;
 
   if (!response.ok || !payload) {
-    throw new Error(
+    throw new ApiError(
       payload?.error ||
         (response.status === 413
           ? "That file is too large to send. Keep each document under 3 MB."
           : "The server could not complete that request. Please try again."),
+      response.status,
     );
   }
 

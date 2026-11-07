@@ -63,7 +63,7 @@ export function ResultsView({ rubric, students, onRestart, onAddMore, onRetryFai
       highest: Math.max(...percentages),
       lowest: Math.min(...percentages),
       totalMs,
-      model: marked[0].result?.model ?? "Gemini",
+      model: marked[0].result?.model ?? "AI",
     };
   }, [marked]);
 

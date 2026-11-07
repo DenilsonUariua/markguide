@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { GeminiError, analyzeGuide } from "@/lib/gemini";
+import { AIError } from "@/lib/ai";
+import { analyzeGuide } from "@/lib/marking";
 import { RequestError, parseGuideFiles } from "@/lib/validate";
 
 export const runtime = "nodejs";
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     if (error instanceof RequestError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    if (error instanceof GeminiError) {
+    if (error instanceof AIError) {
       return NextResponse.json({ error: error.message, detail: error.detail }, { status: error.status });
     }
 
