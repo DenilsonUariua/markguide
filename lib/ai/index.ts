@@ -212,10 +212,26 @@ async function callOnce<T>(provider: Provider, request: ProviderRequest): Promis
 
   try {
     return JSON.parse(stripCodeFence(reply.text)) as T;
-  } catch {
-    throw new AIError(`Could not read ${provider.label}'s response. Please try again.`, 502, {
-      detail: reply.text.slice(0, 400),
-    });
+  } catch (error) {
+    // Gemini 2.5 Flash occasionally falls into a repetition loop ("\b\b\b…"),
+    // spends the whole token budget on it and stops mid-string. That is a
+    // failed generation, not a bad file — the same request usually comes back
+    // clean, so it is worth one more go.
+    const truncated = reply.finishReason === "MAX_TOKENS" || reply.finishReason === "length";
+    const elapsed = Date.now() - started;
+
+    throw new AIError(
+      truncated
+        ? `${provider.label} got stuck partway through that answer. Please try again.`
+        : `Could not read ${provider.label}'s response. Please try again.`,
+      502,
+      {
+        detail: `finishReason=${reply.finishReason ?? "none"} parse="${(error as Error).message}" elapsed=${elapsed}ms text=${reply.text.slice(0, 200)}`,
+        // Only worth retrying while there is budget left: a looped answer has
+        // already eaten 30s of the route's 60s.
+        transient: elapsed < 20_000,
+      },
+    );
   }
 }
 

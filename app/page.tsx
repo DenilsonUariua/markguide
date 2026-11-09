@@ -239,10 +239,19 @@ export default function Page() {
     setRubric(null);
     setMessageIndex(0);
 
+    const body = { files: guideFiles.map((file) => ({ mimeType: file.mimeType, data: file.data })) };
+
     try {
-      const { rubric: parsed } = await postJson<{ rubric: Rubric }>("/api/analyze-guide", {
-        files: guideFiles.map((file) => ({ mimeType: file.mimeType, data: file.data })),
-      });
+      const { rubric: parsed } = await postJson<{ rubric: Rubric }>("/api/analyze-guide", body).catch(
+        async (error) => {
+          // Same quiet retry the marking step gets: a model that stalls mid-JSON
+          // is usually fine on the next try, and the teacher should not have to
+          // re-take the photo to find out.
+          if (!isRetryable(error)) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          return postJson<{ rubric: Rubric }>("/api/analyze-guide", body);
+        },
+      );
       setRubric(parsed);
     } catch (error) {
       setAnalyzeError(

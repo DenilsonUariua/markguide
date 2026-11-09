@@ -84,7 +84,8 @@ export async function analyzeGuide(files: FilePart[]): Promise<Rubric> {
     prompt: GUIDE_INSTRUCTION,
     schema: RUBRIC_SCHEMA as unknown as Record<string, unknown>,
     schemaName: "marking_guide",
-    temperature: 0.1,
+    // Extraction, not writing: the same guide should produce the same rubric.
+    temperature: 0,
   });
 
   return normalizeRubric(raw);
@@ -179,7 +180,10 @@ export async function markDocument(
     prompt: buildMarkInstruction(rubric, studentName),
     schema: MARK_SCHEMA as unknown as Record<string, unknown>,
     schemaName: "student_marks",
-    temperature: 0.15,
+    // 0.15 let the same answer sheet come back 6, 8 or 9 out of 10 depending on
+    // the run. A teacher cannot defend that, so marking is greedy: identical
+    // work must earn identical marks.
+    temperature: 0,
   });
 
   const rawCriteria = Array.isArray(raw?.criteria) ? raw.criteria : [];
