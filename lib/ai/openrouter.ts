@@ -135,6 +135,16 @@ ${JSON.stringify(toJsonSchema(request.schema))}`,
       );
     }
 
+    // A spent free-model quota also arrives as a 429, but waiting will not help:
+    // it resets tomorrow. Telling the teacher to retry sends them in circles.
+    if (status === 429 && /per-day|free-models-per-day|daily limit|free model/i.test(body)) {
+      return new AIError(
+        "OpenRouter's free tier has used up its requests for today (50 a day, 1000 once $10 of credit has been bought). Marking will work again tomorrow, or set AI_PROVIDER=gemini to keep going now.",
+        status,
+        { detail },
+      );
+    }
+
     const message =
       status === 401 || status === 403
         ? "OpenRouter rejected the API key. Check that OPENROUTER_API_KEY is valid and still active."
